@@ -4,102 +4,50 @@ static msg_t msgTable[MAXMESSAGES];
 LIST_HEAD(msgFree_h);
 
 void initMsgs() {
-#define MAXMESSAGES 40 //dimensione massima definita da Renzo
-    typedef struct msg_t {
-        int data ;
-        struct msg_t *next ; //puntatore al prossimo elemento nella lista
-    } msg_t ;
+    extern struct list_head msgFree_h ;
 
-    typedef struct {
-        msg_t *head ;
-    } msgFreeList ;
+   extern msg_t msgTable[MAXMESSAGES] ;
 
-    void initMsgFreeList(msgFreeList *list) {
-        list->head = NULL ;
-    }
-
-    void insertMsgFree(msgFreeList *list, msg_t *msg) {
-        msg->next = list->head ;
-        list->head = msg ;
-    }
-
-    //Funzione per inizializzare la lista msgFree con gli
-    void initMsgs(msgFreeList *msgFree, msg_t *msgArray, size_t arraySize) {
-        initMsgFreeList(msgFree) ; //inizializza la lista msgFree
-
-        //inserisce gli elemento dell'array nella lista
-        for (size_t i = 0; i < arraySize; i++) {
-            insertMsgFree(msgFree, &msgArray[i])
-        }
+   void initMsgs() {
+       int i ;
+       INIT_LIST_HEAD(&msgFree_h) ; //inizializza la lista come vuota
+       for(i = 0; i<MAXMESSAGES; i++) {
+           list_add_tail(&msgTable[i].m_list, &msgFree_h) ; //aggiunge ogni elemento di msgTable alla lista msgFree_h
+       }
+   }
 }
 
 void freeMsg(msg_t *m) {
-        //Struttura del messaggio
-        typedef struct msg_t {
-        int data ;
-        struct msg_t *next ; //puntatore al prossimo elemento nella lista
-    } msg_t ;
+         extern struct list_head msgFree_h ;
 
-    //Definisco la struttura della lista
-    typedef struct {
-        msg_t *head ; //puntatore alla testa della lista
-    } msgFreeList ;
-
-    //Funzione per inizializzare la lista
-    void initMsgFreeList(msgFreeList *list) {
-        list->head = NULL ; //inizializza la testa della lista a NULL
-    }
-
-    //Funzione per inserire un elemento in testa alla lista
-    void insertMsgFree(msgFreeList *list, msg_t *msg) {
-        msg->next = list->head ; //il prossimo elemento del messaggio è l'attuale testa della lista
-        list->head = msg ; //aggiorna la testa della lista con il nuovo messaggio
-    }
-
-    //Funzione per liberare un messaggio e inserirlo nella lista
-    void freeMsg(msgFreeList *msgFree, msg_t *msg) {
-     insertMsgFree(msgFree, msg) ; //inserisce il messaggio nella lista
+    void freeMsg(msg_t *m) { //libera un messaggio e lo inserisce nella lista msgFree_h
+        if(m != NULL) {
+            if(list_empty(&msgFree_h)) {
+                INIT_LIST_HEAD (&msgFree_h) ;
+            }
+            list_add(&m->m_list, &msgFree_h) ;
+        }
     }
 }
 
 
 msg_t *allocMsg() {
-    typedef struct msg_t {
-        int dati ;
-        struct msg_t *next ; //puntatore al prossimo elemento nella lista
-    } msg_t;
+    extern struct list_head msgFree_h ;
 
-    //Struttura della lista
-    typedef struct {
-        msg_t *head
-    } msgFreeList ;
+    msg_t *allocMsg() { //alloca un nuovo messaggio dalla lista msgFree_h
+        if(list_empty(&msgFree_h)) {
+            return NULL ;
+        }
 
+        struct list_head *msgNode = msgFree_h.next ;
+        list_del(msgNode) ; //rimuove un elemento dalla lista msgFree_h
 
-    void initMsgFreeList(msgFreeList *list) {
-        list->head = NULL ; //inizializza la testa della lista a NULL
+        msg_t *newMsg = container_of(msgNode, msg_t, m_list) ; //ottiene il puntatore al messaggio della struttura list_head
+
+        newMsg->m_playload = 0 ;
+
+        return newMsg ; //restituisce il puntatore al messaggio allocato
     }
-
-    //Funzione per inserire un elemento in testa alla lista
-    void insertMsgFree(msgFreeList *list, msg_t *msg) {
-        msg->next = list->head ; //il prossimo elemento del messaggio è l'attuale testa della lista
-        list->head = msg ; //aggiorna la testa della lista con il nuovo messaggio
-    }
-
-    //Funzione per allocare un messaggio
-    msg_t *allocMsg(msgFreeList *msgFree) {
-        if (msgFree == NULL) {
-            return NULL ; //se la lista msgFree è vuota ritorna NULL
-    }
-
-    //Rimozione di un elemento dalla lista msgFree
-    msg_t *allocatedMsg = msgFree->head ;
-    msgFree->head = allocatedMsg->next ;
-
-    //Inizializzazione dei campi del messaggio
-    allocatedMsg->data = 0 ; //valore iniziale campo dati
-    allocatedMsg->next = NULL ; //resetta il puntatore successivo
-
-    return allocatedMsg ;
 }
 
 //Inizializza la lista messaggi vuota
