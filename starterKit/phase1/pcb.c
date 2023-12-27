@@ -5,22 +5,19 @@ LIST_HEAD(pcbFree_h);
 static int next_pid = 1;
 
 void initPcbs() {
-
-	INIT_LIST_HEAD(&pcbFree_h);
 	
-	for(int i = MAXPROC - 1; i >= 0; i--) {
-		list_add()
+	for (int i = 0; i < MAXPROC; i++) {
+		list_add_tail(&pcbTable[i].p_list, &pcbFree_h);
+
 	}
 }
 
 void freePcb(pcb_t *p) {
-/*if pcbFree is empty initialize it*/
-	if(list_empty(&pcbFree_h)) {
-		INIT_LIST_HEAD(&pcbFree_h);
-	} else {
-		list_add(&p->p_list, &pcbFree_h);	
-	}	
-}
+
+	// aggiunge il pcb puntato da p in coda alla lista dei pcbFree
+	list_add_tail(&p->p_list, &pcbFree_h);	
+
+}	
 
 
 pcb_t *allocPcb() {
@@ -31,21 +28,25 @@ pcb_t *allocPcb() {
 
 	} else {
 
-		// get the first element
+		// remove the first element from the list
 		struct list_head *head = pcbFree_h.next;
-		// remove it from the free list
 		list_del(head);
 
 		// return a pointer to the removed element
 		pcb_t *p = container_of(head, pcb_t, p_list);
 
-		// initial values for all PCB fields
-		.p_list
-		.p_parent
-		.p_child
-		.p_sib
+		// initialize all pcbs fields
+		INIT_LIST_HEAD(&p->p_sib);
+		INIT_LIST_HEAD(&p->p_child);
+		p->p_parent = NULL;
 
+		p->p_time = 0;
 
+		INIT_LIST_HEAD(&p->msg_inbox);
+		p->p_supportStruct = NULL;
+		p->p_pid = next_pid++;
+
+		return p;
 	}
 }
 
@@ -65,41 +66,47 @@ void insertProcQ(struct list_head *head, pcb_t *p)
 	list_add_tail(&p->p_list, head);
 }
 
-pcb_t *headProcQ(struct list_head *head) 
-{
-	if (emptyProcQ) {
+
+pcb_t *headProcQ(struct list_head *head) {
+
+	if (list_empty(head)) {
 		return NULL;
-	}
-	else {
+	} else {
+		// return the pointer to the first pcb
 		return container_of(head->next, pcb_t, p_list);
 	}
 }
+
 
 pcb_t *removeProcQ(struct list_head *head) {
 	if (emptyProcQ(head)) {
 		return NULL;
 	} else {
-		pcb_t *removed = headProcQ(head);
+		// remove the first pcb (head)
+		struct pcb_t *removed = headProcQ(head);
 		list_del(&removed->p_list);
 		return removed;
 	}
 }
 
+
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
-    // check if the queue is empty or if p is NULL
-    if (emptyProcQ(head) || !p) {
+
+    // error condition 
+    if (list_empty(head) || p == NULL) {
         return NULL;
+    } else {
+    	// remove the pcb pointed to by p
+    	struct list_head *tmp;
+    	list_for_each(tmp, head);
+    	struct pcb_t *current_pcb = container_of(tmp, pcb_t, p_list);
+    	if(current_pcb == p) {
+    		list_del(tmp);
+    		return p;
+    	}
     }
 
-    struct list_head *iter;
-    list_for_each(iter, head) {
-        struct pcb_t *current_pcb = list_entry(iter, pcb_t, p_list);
-        if (current_pcb == p) {
-            list_del(iter);
-            return p;
-        }
-    }
-    return NULL;
+    return NULL; // error condition
 }
 
 
