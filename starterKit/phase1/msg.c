@@ -4,50 +4,34 @@ static msg_t msgTable[MAXMESSAGES];
 LIST_HEAD(msgFree_h);
 
 void initMsgs() {
-    extern struct list_head msgFree_h ;
-
-   extern msg_t msgTable[MAXMESSAGES] ;
-
-   void initMsgs() {
-       int i ;
-       INIT_LIST_HEAD(&msgFree_h) ; //inizializza la lista come vuota
-       for(i = 0; i<MAXMESSAGES; i++) {
-           list_add_tail(&msgTable[i].m_list, &msgFree_h) ; //aggiunge ogni elemento di msgTable alla lista msgFree_h
-       }
-   }
+    INIT_LIST_HEAD(&msgFree_h) ; //inizializza la lista come vuota
+    for(i = 0; i<MAXMESSAGES; i++) {
+        list_add_tail(&msgTable[i].m_list, &msgFree_h) ; //aggiunge ogni elemento di msgTable alla lista msgFree_h
+    }
 }
 
 void freeMsg(msg_t *m) {
-         extern struct list_head msgFree_h ;
-
-    void freeMsg(msg_t *m) { //libera un messaggio e lo inserisce nella lista msgFree_h
-        if(m != NULL) {
-            if(list_empty(&msgFree_h)) {
-                INIT_LIST_HEAD (&msgFree_h) ;
-            }
-            list_add(&m->m_list, &msgFree_h) ;
+    if(m != NULL) {
+        if(list_empty(&msgFree_h)) {
+            INIT_LIST_HEAD (&msgFree_h) ;
         }
+        list_add(&m->m_list, &msgFree_h) ;
     }
 }
 
-
 msg_t *allocMsg() {
-    extern struct list_head msgFree_h ;
-
-    msg_t *allocMsg() { //alloca un nuovo messaggio dalla lista msgFree_h
-        if(list_empty(&msgFree_h)) {
-            return NULL ;
-        }
-
-        struct list_head *msgNode = msgFree_h.next ;
-        list_del(msgNode) ; //rimuove un elemento dalla lista msgFree_h
-
-        msg_t *newMsg = container_of(msgNode, msg_t, m_list) ; //ottiene il puntatore al messaggio della struttura list_head
-
-        newMsg->m_playload = 0 ;
-
-        return newMsg ; //restituisce il puntatore al messaggio allocato
+    if(list_empty(&msgFree_h)) {
+        return NULL ;
     }
+
+    struct list_head *msgNode = msgFree_h.next ;
+    list_del(msgNode) ; //rimuove un elemento dalla lista msgFree_h
+
+    msg_t *newMsg = container_of(msgNode, msg_t, m_list) ; //ottiene il puntatore al messaggio della struttura list_head
+
+    newMsg->m_playload = 0 ;
+
+    return newMsg ; //restituisce il puntatore al messaggio allocato
 }
 
 //Inizializza la lista messaggi vuota
