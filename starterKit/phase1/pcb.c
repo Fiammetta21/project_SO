@@ -91,24 +91,23 @@ pcb_t *removeProcQ(struct list_head *head) {
 
 
 pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
-
-    // error condition 
     if (list_empty(head) || p == NULL) {
-        return NULL;
-    } else {
-    	// remove the pcb pointed to by p
-    	struct list_head *tmp;
-    	list_for_each(tmp, head);
-    	struct pcb_t *current_pcb = container_of(tmp, pcb_t, p_list);
-    	if(current_pcb == p) {
-    		list_del(tmp);
-    		return p;
-    	}
+        return NULL; // Se la lista è vuota o il PCB passato è nullo, restituisce NULL
     }
 
-    return NULL; // error condition
-}
+    struct list_head *pos;
+    pcb_t *current_pcb;
 
+    list_for_each(pos, head) {
+        current_pcb = container_of(pos, pcb_t, p_list);
+        if (current_pcb == p) { // Trovato il PCB da rimuovere
+            list_del(&current_pcb->p_list);
+            return p; // Restituisce il PCB rimosso
+        }
+    }
+
+    return NULL; // Restituisce NULL se il PCB non è stato trovato nella lista
+}
 
 int emptyChild(pcb_t *p) {
     return list_empty(&p->p_child); 
