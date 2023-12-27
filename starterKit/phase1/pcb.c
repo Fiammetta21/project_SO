@@ -140,7 +140,7 @@ pcb_t *removeChild(pcb_t *p) {
     first_child->p_parent = NULL;
     
     //restituisci il puntatore al PCB del figlio rimosso
-    return fist_child;
+    return first_child;
 }
 
 pcb_t *outChild(pcb_t *p) {

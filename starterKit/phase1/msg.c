@@ -5,7 +5,7 @@ LIST_HEAD(msgFree_h);
 
 void initMsgs() {
     INIT_LIST_HEAD(&msgFree_h) ; //inizializza la lista come vuota
-    for(i = 0; i<MAXMESSAGES; i++) {
+    for(int i = 0; i<MAXMESSAGES; i++) {
         list_add_tail(&msgTable[i].m_list, &msgFree_h) ; //aggiunge ogni elemento di msgTable alla lista msgFree_h
     }
 }
@@ -29,7 +29,7 @@ msg_t *allocMsg() {
 
     msg_t *newMsg = container_of(msgNode, msg_t, m_list) ; //ottiene il puntatore al messaggio della struttura list_head
 
-    newMsg->m_playload = 0 ;
+    newMsg->m_payload = 0 ;
 
     return newMsg ; //restituisce il puntatore al messaggio allocato
 }
