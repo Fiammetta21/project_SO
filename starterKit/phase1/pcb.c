@@ -104,8 +104,7 @@ pcb_t *outProcQ(struct list_head *head, pcb_t *p) {
 
 
 int emptyChild(pcb_t *p) {
-    //verifica se la lista
-    return (p->p_child.next == &p->p_child) && (p->p_child.prev == &p->p_child) ? 1:0;
+    return list_empty(&p->p_child); 
 }
 
 void insertChild(pcb_t *prnt, pcb_t *p) {
@@ -113,29 +112,22 @@ void insertChild(pcb_t *prnt, pcb_t *p) {
     p->p_parent = prnt;
 
     //aggiungi il PCB p alla lista dei figli di prnt
-    if(list_empty(&prnt->p_child)){
-        //la lista dei figli è vuota, quindi p diventa l'unico figlio
-        INIT_LIST_HEAD(&p->p_child);
-        list_add(&p->p_child, &prnt->p_child);}
-        else{
-            //La lista dei figli non è vuota, aggiungi p alla fine della lista
-            list_add_tail(&p->p_child, &prnt->p_child);
-        }
+    list_add_tail(&p->p_sib, &prnt->p_child);
 }
 
 
 pcb_t *removeChild(pcb_t *p) {
     //verifica se lisya dei figli è vuota
     if(list_empty(&p->p_child)){
-        //non ci sono figli, reztituisci NULL
+        //non ci sono figli, restituisci NULL
         return NULL;
     }
 
     //ottieni il primo figlio
-    pcb_t *first_child = list_first_entry(&p->p_child, pcb_t, p_child);
+    pcb_t *first_child = container_of(p->p_child.next, pcb_t, p_sib);
 
     //rimuovi il primo figlio dalla lista dei figli
-    list_del(&first_child->p_child);
+    list_del(&first_child->p_sib);
 
     //rimuovi il riferimento al genitore nel PCB del figlio rimosso
     first_child->p_parent = NULL;
@@ -152,7 +144,7 @@ pcb_t *outChild(pcb_t *p) {
     }
 
     // Rimuovi p dalla lista dei figli del suo genitore
-    list_del(&p->p_child);
+    list_del(&p->p_sib);
 
     // Rimuovi il riferimento al genitore nel PCB p
     p->p_parent = NULL;
