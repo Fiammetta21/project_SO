@@ -102,21 +102,45 @@ msg_t *allocMsg() {
     return allocatedMsg ;
 }
 
-
+//Inizializza la lista messaggi vuota
 void mkEmptyMessageQ(struct list_head *head) {
+    INIT_LIST_HEAD(head);
 }
 
+//Verifica che la lista sia vuota
 int emptyMessageQ(struct list_head *head) {
+    return list_empty(head);
 }
 
+//Inserimento in coda della lista head
 void insertMessage(struct list_head *head, msg_t *m) {
+    list_add_tail(&m->m_list, head);
 }
 
+//Inserimento in testa della lista head
 void pushMessage(struct list_head *head, msg_t *m) {
+    list_add(&m->m_list, head);
 }
 
+//Rimozione messaggio dalla lista
 msg_t *popMessage(struct list_head *head, pcb_t *p_ptr) {
+    struct list_head *temp;
+
+    list_for_each(temp, head) {
+        msg_t *message = container_of(temp, msg_t, m_list);
+        if (p_ptr == NULL || message->m_sender == p_ptr) {
+            list_del(temp); // Rimuove il messaggio dalla lista dei messaggi
+            return message; // Restituisce il messaggio trovato
+        }
+    }
+    return NULL; //NULL se lista vuota o nessun messaggio dall'utente specificato
 }
 
+// Restituisce il primo messaggio in una coda di messaggi, senza rimuoverlo
 msg_t *headMessage(struct list_head *head) {
+    if (list_empty(head)) {
+        return NULL; // Restituisce NULL se la lista è vuota
+    } else {
+        return container_of(head->next, msg_t, m_list); // Restituisce il primo messaggio
+    }
 }
